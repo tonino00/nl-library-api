@@ -9,7 +9,8 @@ const {
   renovarEmprestimo,
   devolverEmprestimo,
   pagarMulta,
-  getEmprestimosAtrasados
+  getEmprestimosAtrasados,
+  atualizarEmprestimo
 } = require('../controllers/emprestimoController');
 const { protect, autorizar, verificarProprietario } = require('../middlewares/auth');
 const Emprestimo = require('../models/Emprestimo');
@@ -391,5 +392,47 @@ router.patch('/:id/devolver', protect, autorizar('admin', 'bibliotecario'), devo
  *         description: Erro no servidor
  */
 router.patch('/:id/multa/pagar', protect, autorizar('admin', 'bibliotecario'), pagarMulta);
+
+/**
+ * @swagger
+ * /api/emprestimos/{id}:
+ *   put:
+ *     summary: Atualiza a data prevista de devolução de um empréstimo
+ *     description: Permite alterar a data prevista de devolução de um empréstimo em andamento
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID do empréstimo
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - dataPrevistaDevolucao
+ *             properties:
+ *               dataPrevistaDevolucao:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Nova data prevista para devolução
+ *     responses:
+ *       200:
+ *         description: Data prevista de devolução atualizada com sucesso
+ *       400:
+ *         description: Dados inválidos ou empréstimo já devolvido
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Permissão negada
+ *       404:
+ *         description: Empréstimo não encontrado
+ *       500:
+ *         description: Erro no servidor
+ */
+router.put('/:id', protect, autorizar('admin', 'bibliotecario'), atualizarEmprestimo);
 
 module.exports = router;

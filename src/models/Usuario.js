@@ -28,16 +28,9 @@ const usuarioSchema = new mongoose.Schema(
       default: 'usuario'
     },
     documento: {
-      tipo: {
-        type: String,
-        enum: ['cpf', 'rg'],
-        required: [true, 'O tipo de documento é obrigatório']
-      },
-      numero: {
-        type: String,
-        required: [true, 'O número do documento é obrigatório'],
-        unique: true
-      }
+      type: String,
+      required: [true, 'O documento é obrigatório'],
+      unique: true
     },
     telefone: {
       type: String,

@@ -455,3 +455,74 @@ exports.getEmprestimosAtrasados = async (req, res) => {
     });
   }
 };
+
+// @desc    Atualizar a data prevista de devolução de um empréstimo
+// @route   PUT /api/emprestimos/:id
+// @access  Privado (Admin/Bibliotecario)
+exports.atualizarEmprestimo = async (req, res) => {
+  try {
+    const { dataPrevistaDevolucao } = req.body;
+
+    if (!dataPrevistaDevolucao) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Data prevista de devolução é obrigatória'
+      });
+    }
+
+    // Verificar se a data é válida
+    const novaData = new Date(dataPrevistaDevolucao);
+    if (isNaN(novaData.getTime())) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Data prevista de devolução inválida'
+      });
+    }
+
+    const emprestimo = await Emprestimo.findById(req.params.id);
+
+    if (!emprestimo) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Empréstimo não encontrado'
+      });
+    }
+
+    // Verificar se o empréstimo já foi devolvido
+    if (emprestimo.status === 'devolvido') {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Não é possível atualizar um empréstimo já devolvido'
+      });
+    }
+
+    // Atualizar a data prevista de devolução
+    emprestimo.dataPrevistaDevolucao = novaData;
+    
+    // Se o empréstimo estava atrasado, verificar se com a nova data ainda está atrasado
+    const hoje = new Date();
+    if (emprestimo.status === 'atrasado' && novaData >= hoje) {
+      emprestimo.status = 'emprestado';
+    } else if (emprestimo.status === 'emprestado' && novaData < hoje) {
+      emprestimo.status = 'atrasado';
+    }
+
+    await emprestimo.save();
+
+    const emprestimoAtualizado = await Emprestimo.findById(emprestimo._id)
+      .populate('usuario', 'nome email')
+      .populate('livro', 'titulo autor isbn');
+
+    res.status(200).json({
+      sucesso: true,
+      mensagem: 'Data prevista de devolução atualizada com sucesso',
+      data: emprestimoAtualizado
+    });
+  } catch (err) {
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao atualizar empréstimo',
+      erro: err.message
+    });
+  }
+};

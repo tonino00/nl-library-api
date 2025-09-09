@@ -93,8 +93,8 @@ exports.registrarUsuario = async (req, res) => {
     }
 
     // Verificar se o documento já existe
-    if (documento && documento.numero) {
-      const documentoExiste = await Usuario.findOne({ 'documento.numero': documento.numero });
+    if (documento) {
+      const documentoExiste = await Usuario.findOne({ documento });
       if (documentoExiste) {
         return res.status(400).json({
           sucesso: false,
@@ -225,9 +225,8 @@ exports.atualizarUsuario = async (req, res) => {
     }
 
     // Verificar se o documento foi alterado e já existe
-    if (req.body.documento && req.body.documento.numero && 
-        req.body.documento.numero !== usuario.documento.numero) {
-      const documentoExiste = await Usuario.findOne({ 'documento.numero': req.body.documento.numero });
+    if (req.body.documento && req.body.documento !== usuario.documento) {
+      const documentoExiste = await Usuario.findOne({ documento: req.body.documento });
       if (documentoExiste) {
         return res.status(400).json({
           sucesso: false,

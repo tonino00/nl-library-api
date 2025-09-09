@@ -45,14 +45,8 @@ const Usuario = require('../models/Usuario');
  *           default: usuario
  *           description: Tipo/Nível de acesso do usuário
  *         documento:
- *           type: object
- *           properties:
- *             tipo:
- *               type: string
- *               enum: [cpf, rg]
- *             numero:
- *               type: string
- *           description: Documento de identificação (CPF ou RG)
+ *           type: string
+ *           description: Documento de identificação do usuário (CPF ou RG)
  *         telefone:
  *           type: string
  *           description: Número de telefone para contato
