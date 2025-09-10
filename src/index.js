@@ -17,6 +17,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir arquivos estáticos
+app.use(express.static('public'));
+app.use('/swagger-static', express.static('node_modules/swagger-ui-dist'));
+
 // Configuração do Swagger
 const swaggerOptions = {
   definition: {
@@ -33,7 +37,7 @@ const swaggerOptions = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production'
-          ? ''
+          ? 'https://nl-library-api.onrender.com'
           : `http://localhost:${PORT}`,
         description: process.env.NODE_ENV === 'production'
           ? 'Servidor de produção'
@@ -44,8 +48,31 @@ const swaggerOptions = {
   apis: ['./src/routes/*.js']
 };
 
+// Gerar documentação do Swagger
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+// Configurar opções do Swagger UI - com arquivos CDN para produção
+const swaggerUIOptions = {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui.min.css',
+  swaggerUrl: '/swagger.json',
+  swaggerOptions: {
+    docExpansion: 'none',
+    persistAuthorization: true,
+    url: '/swagger.json'
+  }
+};
+
+// Servir o arquivo swagger.json para o Swagger UI CDN
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocs);
+});
+
+// Servir Swagger UI
+app.use('/api-docs', swaggerUI.serve);
+app.get('/api-docs', swaggerUI.setup(swaggerDocs, swaggerUIOptions));
 
 // Conectar ao banco de dados
 dbConnection();
