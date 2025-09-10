@@ -32,8 +32,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${PORT}`,
-        description: 'Servidor de desenvolvimento'
+        url: process.env.NODE_ENV === 'production'
+          ? ''
+          : `http://localhost:${PORT}`,
+        description: process.env.NODE_ENV === 'production'
+          ? 'Servidor de produção'
+          : 'Servidor de desenvolvimento'
       }
     ]
   },
@@ -54,9 +58,13 @@ app.use('/api/categorias', require('./routes/categoriaRoutes'));
 
 // Rota padrão
 app.get('/', (req, res) => {
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? req.protocol + '://' + req.get('host')
+    : `http://localhost:${PORT}`;
+    
   res.json({
     mensagem: 'Bem-vindo à API da Biblioteca',
-    documentacao: `http://localhost:${PORT}/api-docs`
+    documentacao: `${baseUrl}/api-docs`
   });
 });
 
@@ -68,5 +76,11 @@ app.use((req, res) => {
 // Iniciar o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Documentação disponível em http://localhost:${PORT}/api-docs`);
+  
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'URL da aplicação em produção' // Será a URL fornecida pelo Render
+    : `http://localhost:${PORT}`;
+    
+  console.log(`Documentação disponível em ${baseUrl}/api-docs`);
+  console.log(`Ambiente: ${process.env.NODE_ENV || 'desenvolvimento'}`);
 });
