@@ -134,7 +134,7 @@ router.get('/:id/livros', getLivrosPorCategoria);
  *       500:
  *         description: Erro no servidor
  */
-router.post('/', protect, autorizar('admin', 'bibliotecario'), criarCategoria);
+router.post('/', protect, autorizar('admin'), criarCategoria);
 
 /**
  * @swagger
@@ -169,7 +169,7 @@ router.post('/', protect, autorizar('admin', 'bibliotecario'), criarCategoria);
  *       500:
  *         description: Erro no servidor
  */
-router.put('/:id', protect, autorizar('admin', 'bibliotecario'), atualizarCategoria);
+router.put('/:id', protect, autorizar('admin'), atualizarCategoria);
 
 /**
  * @swagger

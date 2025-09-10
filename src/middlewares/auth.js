@@ -70,8 +70,8 @@ exports.autorizar = (...tipos) => {
 // Middleware para verificar se o usuário é o proprietário do recurso ou um admin/bibliotecário
 exports.verificarProprietario = (modelo) => {
   return async (req, res, next) => {
-    // Administradores e bibliotecários têm acesso total
-    if (['admin', 'bibliotecario'].includes(req.usuario.tipo)) {
+    // Administradores têm acesso total
+    if (req.usuario.tipo === 'admin') {
       return next();
     }
 

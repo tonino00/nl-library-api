@@ -24,8 +24,8 @@ const usuarioSchema = new mongoose.Schema(
     },
     tipo: {
       type: String,
-      enum: ['admin', 'bibliotecario', 'usuario'],
-      default: 'usuario'
+      enum: ['admin', 'leitor'],
+      default: 'leitor'
     },
     documento: {
       type: String,

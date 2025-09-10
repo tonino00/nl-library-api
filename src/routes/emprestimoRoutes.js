@@ -10,7 +10,9 @@ const {
   devolverEmprestimo,
   pagarMulta,
   getEmprestimosAtrasados,
-  atualizarEmprestimo
+  atualizarEmprestimo,
+  reservarLivro,
+  confirmarReserva
 } = require('../controllers/emprestimoController');
 const { protect, autorizar, verificarProprietario } = require('../middlewares/auth');
 const Emprestimo = require('../models/Emprestimo');
@@ -50,7 +52,7 @@ const Emprestimo = require('../models/Emprestimo');
  *           description: Data em que o livro foi devolvido
  *         status:
  *           type: string
- *           enum: [emprestado, devolvido, atrasado]
+ *           enum: [reservado, emprestado, devolvido, atrasado]
  *           default: emprestado
  *           description: Status do empréstimo
  *         multa:
@@ -108,7 +110,7 @@ const Emprestimo = require('../models/Emprestimo');
  *         name: status
  *         schema:
  *           type: string
- *           enum: [emprestado, devolvido, atrasado]
+ *           enum: [reservado, emprestado, devolvido, atrasado]
  *         description: Filtrar por status do empréstimo
  *       - in: query
  *         name: usuario
@@ -142,7 +144,7 @@ const Emprestimo = require('../models/Emprestimo');
  *       500:
  *         description: Erro no servidor
  */
-router.get('/', protect, autorizar('admin', 'bibliotecario'), getEmprestimos);
+router.get('/', protect, autorizar('admin'), getEmprestimos);
 
 /**
  * @swagger
@@ -160,7 +162,7 @@ router.get('/', protect, autorizar('admin', 'bibliotecario'), getEmprestimos);
  *       500:
  *         description: Erro no servidor
  */
-router.get('/atrasados', protect, autorizar('admin', 'bibliotecario'), getEmprestimosAtrasados);
+router.get('/atrasados', protect, autorizar('admin'), getEmprestimosAtrasados);
 
 /**
  * @swagger
@@ -179,7 +181,7 @@ router.get('/atrasados', protect, autorizar('admin', 'bibliotecario'), getEmpres
  *         name: status
  *         schema:
  *           type: string
- *           enum: [emprestado, devolvido, atrasado]
+ *           enum: [reservado, emprestado, devolvido, atrasado]
  *         description: Filtrar por status do empréstimo
  *     responses:
  *       200:
@@ -195,7 +197,7 @@ router.get('/atrasados', protect, autorizar('admin', 'bibliotecario'), getEmpres
  */
 router.get('/usuario/:id', protect, (req, res, next) => {
   // Permitir que usuários vejam seus próprios empréstimos
-  if (req.usuario._id.toString() === req.params.id || ['admin', 'bibliotecario'].includes(req.usuario.tipo)) {
+  if (req.usuario._id.toString() === req.params.id || req.usuario.tipo === 'admin') {
     return next();
   }
   return res.status(403).json({
@@ -221,7 +223,7 @@ router.get('/usuario/:id', protect, (req, res, next) => {
  *         name: status
  *         schema:
  *           type: string
- *           enum: [emprestado, devolvido, atrasado]
+ *           enum: [reservado, emprestado, devolvido, atrasado]
  *         description: Filtrar por status do empréstimo
  *     responses:
  *       200:
@@ -235,7 +237,7 @@ router.get('/usuario/:id', protect, (req, res, next) => {
  *       500:
  *         description: Erro no servidor
  */
-router.get('/livro/:id', protect, autorizar('admin', 'bibliotecario'), getEmprestimosLivro);
+router.get('/livro/:id', protect, autorizar('admin'), getEmprestimosLivro);
 
 /**
  * @swagger
@@ -304,7 +306,7 @@ router.get('/:id', protect, verificarProprietario(Emprestimo), getEmprestimo);
  *       500:
  *         description: Erro no servidor
  */
-router.post('/', protect, autorizar('admin', 'bibliotecario'), criarEmprestimo);
+router.post('/', protect, autorizar('admin'), criarEmprestimo);
 
 /**
  * @swagger
@@ -362,7 +364,7 @@ router.patch('/:id/renovar', protect, verificarProprietario(Emprestimo), renovar
  *       500:
  *         description: Erro no servidor
  */
-router.patch('/:id/devolver', protect, autorizar('admin', 'bibliotecario'), devolverEmprestimo);
+router.patch('/:id/devolver', protect, autorizar('admin'), devolverEmprestimo);
 
 /**
  * @swagger
@@ -391,7 +393,7 @@ router.patch('/:id/devolver', protect, autorizar('admin', 'bibliotecario'), devo
  *       500:
  *         description: Erro no servidor
  */
-router.patch('/:id/multa/pagar', protect, autorizar('admin', 'bibliotecario'), pagarMulta);
+router.patch('/:id/multa/pagar', protect, autorizar('admin'), pagarMulta);
 
 /**
  * @swagger
@@ -433,6 +435,67 @@ router.patch('/:id/multa/pagar', protect, autorizar('admin', 'bibliotecario'), p
  *       500:
  *         description: Erro no servidor
  */
-router.put('/:id', protect, autorizar('admin', 'bibliotecario'), atualizarEmprestimo);
+router.put('/:id', protect, autorizar('admin'), atualizarEmprestimo);
+
+/**
+ * @swagger
+ * /api/emprestimos/reservar:
+ *   post:
+ *     summary: Reserva um livro
+ *     description: Cria uma nova reserva de livro para o usuário autenticado
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - livro
+ *             properties:
+ *               livro:
+ *                 type: string
+ *                 description: ID do livro a ser reservado
+ *     responses:
+ *       201:
+ *         description: Livro reservado com sucesso
+ *       400:
+ *         description: Dados inválidos, livro indisponível, ou usuário com empréstimos em atraso
+ *       401:
+ *         description: Não autorizado
+ *       404:
+ *         description: Livro não encontrado
+ *       500:
+ *         description: Erro no servidor
+ */
+router.post('/reservar', protect, reservarLivro);
+
+/**
+ * @swagger
+ * /api/emprestimos/{id}/confirmar:
+ *   patch:
+ *     summary: Confirma uma reserva e converte em empréstimo
+ *     description: Converte uma reserva existente em um empréstimo ativo
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID da reserva
+ *     responses:
+ *       200:
+ *         description: Reserva confirmada e convertida em empréstimo com sucesso
+ *       400:
+ *         description: O registro não é uma reserva
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Permissão negada
+ *       404:
+ *         description: Reserva não encontrada
+ *       500:
+ *         description: Erro no servidor
+ */
+router.patch('/:id/confirmar', protect, autorizar('admin'), confirmarReserva);
 
 module.exports = router;

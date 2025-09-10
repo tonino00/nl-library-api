@@ -189,7 +189,7 @@ router.get('/:id', getLivro);
  *       500:
  *         description: Erro no servidor
  */
-router.post('/', protect, autorizar('admin', 'bibliotecario'), criarLivro);
+router.post('/', protect, autorizar('admin'), criarLivro);
 
 /**
  * @swagger
@@ -220,7 +220,7 @@ router.post('/', protect, autorizar('admin', 'bibliotecario'), criarLivro);
  *       500:
  *         description: Erro no servidor
  */
-router.put('/:id', protect, autorizar('admin', 'bibliotecario'), atualizarLivro);
+router.put('/:id', protect, autorizar('admin'), atualizarLivro);
 
 /**
  * @swagger

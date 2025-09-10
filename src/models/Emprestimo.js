@@ -25,7 +25,7 @@ const emprestimoSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['emprestado', 'devolvido', 'atrasado'],
+      enum: ['reservado', 'emprestado', 'devolvido', 'atrasado'],
       default: 'emprestado'
     },
     multa: {

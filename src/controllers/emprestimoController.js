@@ -456,6 +456,142 @@ exports.getEmprestimosAtrasados = async (req, res) => {
   }
 };
 
+// @desc    Reservar um livro
+// @route   POST /api/emprestimos/reservar
+// @access  Privado (Todos os usuários)
+exports.reservarLivro = async (req, res) => {
+  try {
+    const { livro: livroId } = req.body;
+    const usuarioId = req.usuario._id;
+
+    // Verificar se o livro existe
+    const livro = await Livro.findById(livroId);
+    if (!livro) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Livro não encontrado'
+      });
+    }
+
+    // Verificar se há exemplares disponíveis para reserva
+    if (livro.disponiveis <= 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Não há exemplares disponíveis deste livro para reserva'
+      });
+    }
+
+    // Verificar se o usuário já tem empréstimos atrasados
+    const emprestimosAtrasados = await Emprestimo.find({
+      usuario: usuarioId,
+      status: 'atrasado'
+    });
+    if (emprestimosAtrasados.length > 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Usuário possui empréstimos em atraso'
+      });
+    }
+
+    // Verificar se já existe uma reserva/empréstimo ativo deste livro para este usuário
+    const emprestimosAtivos = await Emprestimo.find({
+      usuario: usuarioId,
+      livro: livroId,
+      status: { $in: ['reservado', 'emprestado'] }
+    });
+
+    if (emprestimosAtivos.length > 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Você já possui uma reserva ou empréstimo ativo deste livro'
+      });
+    }
+
+    // Criar reserva (válida por 2 dias)
+    const dataExpiracao = new Date();
+    dataExpiracao.setDate(dataExpiracao.getDate() + 2);
+
+    const reserva = await Emprestimo.create({
+      usuario: usuarioId,
+      livro: livroId,
+      dataPrevistaDevolucao: dataExpiracao,
+      status: 'reservado'
+    });
+
+    // Atualizar quantidade disponível do livro
+    livro.disponiveis -= 1;
+    await livro.save();
+
+    // Retornar a reserva com informações do usuário e livro
+    const reservaCompleta = await Emprestimo.findById(reserva._id)
+      .populate('usuario', 'nome email')
+      .populate('livro', 'titulo autor isbn');
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: 'Livro reservado com sucesso. A reserva é válida por 2 dias.',
+      data: reservaCompleta
+    });
+  } catch (err) {
+    res.status(400).json({
+      sucesso: false,
+      mensagem: 'Erro ao reservar livro',
+      erro: err.message
+    });
+  }
+};
+
+// @desc    Confirmar uma reserva e transformá-la em empréstimo
+// @route   PATCH /api/emprestimos/:id/confirmar
+// @access  Privado (Admin)
+exports.confirmarReserva = async (req, res) => {
+  try {
+    const reserva = await Emprestimo.findById(req.params.id);
+
+    if (!reserva) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Reserva não encontrada'
+      });
+    }
+
+    // Verificar se é realmente uma reserva
+    if (reserva.status !== 'reservado') {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Este registro não é uma reserva'
+      });
+    }
+
+    // Converter para empréstimo
+    const dataEmprestimo = new Date();
+    const dataPrevista = new Date();
+    dataPrevista.setDate(dataPrevista.getDate() + 14); // 14 dias para devolução
+
+    reserva.dataEmprestimo = dataEmprestimo;
+    reserva.dataPrevistaDevolucao = dataPrevista;
+    reserva.status = 'emprestado';
+
+    await reserva.save();
+
+    const emprestimoAtualizado = await Emprestimo.findById(reserva._id)
+      .populate('usuario', 'nome email')
+      .populate('livro', 'titulo autor isbn');
+
+    res.status(200).json({
+      sucesso: true,
+      mensagem: 'Reserva confirmada e convertida em empréstimo',
+      data: emprestimoAtualizado
+    });
+  } catch (err) {
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao confirmar reserva',
+      erro: err.message
+    });
+  }
+};
+
 // @desc    Atualizar a data prevista de devolução de um empréstimo
 // @route   PUT /api/emprestimos/:id
 // @access  Privado (Admin/Bibliotecario)
