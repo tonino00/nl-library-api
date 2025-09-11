@@ -12,6 +12,10 @@ const livroSchema = new mongoose.Schema(
       required: [true, 'O autor do livro é obrigatório'],
       trim: true
     },
+    autorEspiritual: {
+      type: String,
+      trim: true
+    },
     isbn: {
       type: String,
       unique: true,

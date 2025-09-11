@@ -33,6 +33,9 @@ const { protect, autorizar } = require('../middlewares/auth');
  *         autor:
  *           type: string
  *           description: Nome do autor do livro
+ *         autorEspiritual:
+ *           type: string
+ *           description: Nome do autor espiritual da obra (opcional)
  *         isbn:
  *           type: string
  *           description: ISBN do livro (único)
