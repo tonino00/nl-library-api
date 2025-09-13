@@ -12,7 +12,8 @@ const {
   getEmprestimosAtrasados,
   atualizarEmprestimo,
   reservarLivro,
-  confirmarReserva
+  confirmarReserva,
+  removerEmprestimo
 } = require('../controllers/emprestimoController');
 const { protect, autorizar, verificarProprietario } = require('../middlewares/auth');
 const Emprestimo = require('../models/Emprestimo');
@@ -497,5 +498,32 @@ router.post('/reservar', protect, reservarLivro);
  *         description: Erro no servidor
  */
 router.patch('/:id/confirmar', protect, autorizar('admin'), confirmarReserva);
+
+/**
+ * @swagger
+ * /api/emprestimos/{id}:
+ *   delete:
+ *     summary: Remove um empréstimo
+ *     description: Remove um empréstimo pelo ID e devolve o livro ao estoque se necessário (requer autenticação de admin)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID do empréstimo
+ *     responses:
+ *       200:
+ *         description: Empréstimo removido com sucesso
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Permissão negada
+ *       404:
+ *         description: Empréstimo não encontrado
+ *       500:
+ *         description: Erro no servidor
+ */
+router.delete('/:id', protect, autorizar('admin'), removerEmprestimo);
 
 module.exports = router;

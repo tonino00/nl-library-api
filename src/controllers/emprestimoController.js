@@ -662,3 +662,42 @@ exports.atualizarEmprestimo = async (req, res) => {
     });
   }
 };
+
+// @desc    Remover um empréstimo
+// @route   DELETE /api/emprestimos/:id
+// @access  Privado (Admin)
+exports.removerEmprestimo = async (req, res) => {
+  try {
+    const emprestimo = await Emprestimo.findById(req.params.id);
+
+    if (!emprestimo) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Empréstimo não encontrado'
+      });
+    }
+
+    // Se o empréstimo estiver com status 'emprestado' ou 'reservado', devolver o livro ao estoque
+    if (emprestimo.status === 'emprestado' || emprestimo.status === 'reservado') {
+      const livro = await Livro.findById(emprestimo.livro);
+      if (livro) {
+        livro.disponiveis += 1;
+        await livro.save();
+      }
+    }
+
+    // Remover o empréstimo
+    await Emprestimo.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      sucesso: true,
+      mensagem: 'Empréstimo removido com sucesso'
+    });
+  } catch (err) {
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao remover empréstimo',
+      erro: err.message
+    });
+  }
+};
