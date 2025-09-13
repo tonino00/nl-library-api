@@ -8,7 +8,8 @@ const {
   atualizarUsuario,
   alterarTipoUsuario,
   alterarStatusUsuario,
-  alterarSenha
+  alterarSenha,
+  removerUsuario
 } = require('../controllers/usuarioController');
 const { protect, autorizar, verificarProprietario } = require('../middlewares/auth');
 const Usuario = require('../models/Usuario');
@@ -374,5 +375,34 @@ router.patch('/:id/status', protect, autorizar('admin'), alterarStatusUsuario);
  *         description: Erro no servidor
  */
 router.patch('/:id/senha', protect, verificarProprietario(Usuario), alterarSenha);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   delete:
+ *     summary: Remove um usuário
+ *     description: Remove um usuário pelo ID (requer autenticação de admin)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID do usuário
+ *     responses:
+ *       200:
+ *         description: Usuário removido com sucesso
+ *       400:
+ *         description: Usuário não pode ser removido (possui empréstimos ativos)
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Permissão negada
+ *       404:
+ *         description: Usuário não encontrado
+ *       500:
+ *         description: Erro no servidor
+ */
+router.delete('/:id', protect, autorizar('admin'), removerUsuario);
 
 module.exports = router;

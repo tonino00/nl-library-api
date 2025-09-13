@@ -1,4 +1,5 @@
 const Usuario = require('../models/Usuario');
+const Emprestimo = require('../models/Emprestimo');
 const jwt = require('jsonwebtoken');
 
 // @desc    Gerar token JWT
@@ -395,6 +396,49 @@ exports.alterarSenha = async (req, res) => {
     res.status(400).json({
       sucesso: false,
       mensagem: 'Erro ao alterar senha',
+      erro: err.message
+    });
+  }
+};
+
+// @desc    Remover usuário
+// @route   DELETE /api/usuarios/:id
+// @access  Privado (Admin)
+exports.removerUsuario = async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.params.id);
+
+    if (!usuario) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Usuário não encontrado'
+      });
+    }
+
+    // Verificar se existem empréstimos ativos vinculados ao usuário
+    const emprestimosAtivos = await Emprestimo.find({
+      usuario: req.params.id,
+      status: 'ativo'
+    });
+
+    if (emprestimosAtivos.length > 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Este usuário possui empréstimos ativos e não pode ser removido',
+        emprestimos: emprestimosAtivos.length
+      });
+    }
+
+    await Usuario.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      sucesso: true,
+      mensagem: 'Usuário removido com sucesso'
+    });
+  } catch (err) {
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao remover usuário',
       erro: err.message
     });
   }
