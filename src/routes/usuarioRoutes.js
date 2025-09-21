@@ -42,7 +42,7 @@ const Usuario = require('../models/Usuario');
  *           description: Senha do usuário (mínimo 6 caracteres)
  *         tipo:
  *           type: string
- *           enum: [admin, leitor]
+ *           enum: [admin, leitor, comunidade]
  *           default: leitor
  *           description: Tipo/Nível de acesso do usuário
  *         documento:
@@ -114,7 +114,7 @@ const Usuario = require('../models/Usuario');
  *         name: tipo
  *         schema:
  *           type: string
- *           enum: [admin, leitor]
+ *           enum: [admin, leitor, comunidade]
  *         description: Filtrar por tipo de usuário
  *       - in: query
  *         name: ativo
@@ -273,7 +273,7 @@ router.put('/:id', protect, verificarProprietario(Usuario), atualizarUsuario);
  *             properties:
  *               tipo: {
  *                 type: String,
- *                 enum: ['admin', 'leitor'],
+ *                 enum: ['admin', 'leitor', 'comunidade'],
  *                 default: 'leitor'
  *               }
  *     responses:

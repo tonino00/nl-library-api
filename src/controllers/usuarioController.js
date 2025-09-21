@@ -273,7 +273,7 @@ exports.alterarTipoUsuario = async (req, res) => {
       });
     }
 
-    if (!req.body.tipo || !['admin', 'bibliotecario', 'usuario'].includes(req.body.tipo)) {
+    if (!req.body.tipo || !['admin', 'leitor', 'comunidade', 'bibliotecario', 'usuario'].includes(req.body.tipo)) {
       return res.status(400).json({
         sucesso: false,
         mensagem: 'Tipo de usuário inválido'
