@@ -19,9 +19,6 @@ const { protect, autorizar } = require('../middlewares/auth');
  *       required:
  *         - titulo
  *         - autor
- *         - isbn
- *         - editora
- *         - anoPublicacao
  *         - categoria
  *       properties:
  *         _id:
@@ -38,13 +35,13 @@ const { protect, autorizar } = require('../middlewares/auth');
  *           description: Nome do autor espiritual da obra (opcional)
  *         isbn:
  *           type: string
- *           description: ISBN do livro (único)
+ *           description: ISBN do livro (único, opcional)
  *         editora:
  *           type: string
- *           description: Nome da editora
+ *           description: Nome da editora (opcional)
  *         anoPublicacao:
  *           type: number
- *           description: Ano de publicação do livro
+ *           description: Ano de publicação do livro (opcional)
  *         categoria:
  *           type: string
  *           description: ID da categoria do livro
@@ -184,6 +181,27 @@ router.get('/:id', getLivro);
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Livro'
+ *           examples:
+ *             livroCompleto:
+ *               summary: Exemplo de livro com todos os campos
+ *               value:
+ *                 titulo: 'O Evangelho Segundo o Espiritismo'
+ *                 autor: 'Allan Kardec'
+ *                 autorEspiritual: 'Espíritos Diversos'
+ *                 isbn: '9788573284225'
+ *                 editora: 'FEB'
+ *                 anoPublicacao: 1864
+ *                 categoria: '60a6f4a87d5fbc001d7b9f1c'
+ *                 quantidade: 5
+ *                 descricao: 'Obra básica da codificação espírita'
+ *                 localizacao: {prateleira: 'A', secao: '1'}
+ *             livroMinimo:
+ *               summary: Exemplo de livro com campos mínimos obrigatórios
+ *               value:
+ *                 titulo: 'O Livro dos Espíritos'
+ *                 autor: 'Allan Kardec'
+ *                 categoria: '60a6f4a87d5fbc001d7b9f1c'
+ *                 quantidade: 3
  *     responses:
  *       201:
  *         description: Livro criado com sucesso
@@ -213,6 +231,26 @@ router.post('/', protect, autorizar('admin'), criarLivro);
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Livro'
+ *           examples:
+ *             atualizacaoCompleta:
+ *               summary: Exemplo de atualização com todos os campos
+ *               value:
+ *                 titulo: 'O Céu e o Inferno'
+ *                 autor: 'Allan Kardec'
+ *                 autorEspiritual: 'Espíritos Diversos'
+ *                 isbn: '9788573284301'
+ *                 editora: 'FEB'
+ *                 anoPublicacao: 1865
+ *                 categoria: '60a6f4a87d5fbc001d7b9f1c'
+ *                 quantidade: 3
+ *                 descricao: 'Obra que analisa a justiça divina'
+ *                 localizacao: {prateleira: 'B', secao: '2'}
+ *             atualizacaoParcial:
+ *               summary: Exemplo de atualização parcial apenas dos campos obrigatórios
+ *               value:
+ *                 titulo: 'A Gênese'
+ *                 autor: 'Allan Kardec'
+ *                 categoria: '60a6f4a87d5fbc001d7b9f1c'
  *     responses:
  *       200:
  *         description: Livro atualizado com sucesso
