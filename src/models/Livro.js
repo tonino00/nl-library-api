@@ -19,17 +19,14 @@ const livroSchema = new mongoose.Schema(
     isbn: {
       type: String,
       unique: true,
-      required: [true, 'O ISBN do livro é obrigatório'],
       trim: true
     },
     editora: {
       type: String,
-      required: [true, 'A editora do livro é obrigatória'],
       trim: true
     },
     anoPublicacao: {
-      type: Number,
-      required: [true, 'O ano de publicação é obrigatório']
+      type: Number
     },
     categoria: {
       type: mongoose.Schema.Types.ObjectId,
